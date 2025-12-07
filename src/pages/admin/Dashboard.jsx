@@ -30,7 +30,7 @@ export default function AdminDashboard() {
         { label: 'Total Registrations', value: '3,25,000', color: 'text-orange-600', icon: 'clipboard' },
         { label: 'Funds Available', value: '₹ 85,00,000', color: 'text-indigo-600', icon: 'rupee' },
     ];
-    
+
     const renderIcon = (icon) => {
         switch (icon) {
             case 'users':
@@ -203,6 +203,8 @@ export default function AdminDashboard() {
                             <h3 className="text-lg font-bold text-govt-text group-hover:text-govt-blue-dark">Add Skill Courses</h3>
                             <p className="mt-1 text-sm text-gray-600">Manage and add new skill development courses for beneficiaries.</p>
                         </Link>
+
+
                     </div>
                 </motion.div>
             </main>

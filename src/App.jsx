@@ -13,33 +13,58 @@ import BeneficiaryProfiling from './pages/officer/dashboard/BeneficiaryProfiling
 import PrivateRoute from './protected/PrivateRoute'
 import Unauthorized from './pages/Unauthorized' // Import the new Unauthorized component
 
+// PFMS Module Imports
+import { PFMSProvider } from './pfms/store/pfmsStore.jsx'
+import PFMSDashboard from './pfms/pages/PFMSDashboard'
+import BatchDetails from './pfms/pages/BatchDetails'
+import BatchCreate from './pfms/components/BatchCreate'
+
+import React, { Suspense } from 'react';
+
+// Lazy load the new module
+const CreateProjectPage = React.lazy(() => import('./giaProject/pages/CreateProjectPage'));
+
 function App() {
     return (
-        <Routes>
-            {/* Landing Page with Role Selection */}
-            <Route path="/" element={<Landing />} />
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+            <Routes>
+                {/* Landing Page with Role Selection */}
+                <Route path="/" element={<Landing />} />
 
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route element={<PrivateRoute />}>
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/create-scheme" element={<CreateScheme />} /> {/* New Route */}
-                <Route path="/admin/release-funds" element={<ReleaseFunds />} /> {/* New Route */}
-                <Route path="/admin/add-skill-courses" element={<AddSkillCourses />} /> {/* New Route */}
-            </Route>
+                {/* Admin Routes */}
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route element={<PrivateRoute />}>
+                    <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                    <Route path="/admin/create-scheme" element={<CreateScheme />} /> {/* New Route */}
+                    <Route path="/admin/release-funds" element={<ReleaseFunds />} /> {/* New Route */}
+                    {/* Replaced AddSkillCourses with GIA Project Creation Form as per user request */}
+                    <Route path="/admin/add-skill-courses" element={<CreateProjectPage />} />
+                </Route>
 
-            {/* Officer Routes */}
-            <Route path="/officer/login" element={<OfficerLogin />} />
-            <Route element={<PrivateRoute />}>
-                <Route path="/officer/dashboard" element={<OfficerDashboard />} />
-                <Route path="/officer/dashboard/verification" element={<DocumentVerification />} />
-                <Route path="/officer/dashboard/field-visit" element={<FieldEnumerator />} />
-                <Route path="/officer/dashboard/profiling" element={<BeneficiaryProfiling />} />
-            </Route>
+                {/* Officer Routes */}
+                <Route path="/officer/login" element={<OfficerLogin />} />
+                <Route element={<PrivateRoute />}>
+                    <Route path="/officer/dashboard" element={<OfficerDashboard />} />
+                    <Route path="/officer/dashboard/verification" element={<DocumentVerification />} />
+                    <Route path="/officer/dashboard/field-visit" element={<FieldEnumerator />} />
+                    <Route path="/officer/dashboard/profiling" element={<BeneficiaryProfiling />} />
 
-            {/* Unauthorized Route */}
-            <Route path="/unauthorized" element={<Unauthorized />} />
-        </Routes>
+                    {/* PFMS Routes - Protected under Officer */}
+                    <Route path="/pfms/*" element={
+                        <PFMSProvider>
+                            <Routes>
+                                <Route path="/" element={<PFMSDashboard />} />
+                                <Route path="/create" element={<BatchCreate />} />
+                                <Route path="/batch/:id" element={<BatchDetails />} />
+                            </Routes>
+                        </PFMSProvider>
+                    } />
+                </Route>
+
+                {/* Unauthorized Route */}
+                <Route path="/unauthorized" element={<Unauthorized />} />
+            </Routes>
+        </Suspense>
     )
 }
 
