@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import GovtLayout from '../../../components/layout/GovtLayout';
 
 const OfficerDashboard = () => {
     const navigate = useNavigate();
@@ -94,141 +95,145 @@ const OfficerDashboard = () => {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-20 items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                            <img src="/gov.svg" alt="Emblem" className="h-12 w-auto" />
-                            <div className="border-l-2 border-gray-200 pl-4">
-                                <h1 className="text-lg font-bold text-govt-text leading-tight">Officer Portal</h1>
-                                <p className="text-xs text-gray-500 font-medium">Ministry of Social Justice and Empowerment</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="hidden md:block text-right">
-                                <p className="text-sm font-semibold text-govt-text">{officerData.firstName} {officerData.lastName}</p>
-                                <p className="text-xs text-gray-500">{officerData.designation}</p>
-                            </div>
-                            <button
-                                onClick={handleLogout}
-                                className="bg-govt-blue-light hover:bg-govt-blue-dark text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm hover:shadow-md"
-                            >
-                                Logout
-                            </button>
-                        </div>
-                    </div>
+        <GovtLayout
+            userRole="officer"
+            userName={`${officerData.firstName} ${officerData.lastName}`}
+            userDesignation={officerData.designation}
+            onLogout={handleLogout}
+        >
+            <div className="space-y-8">
+                {/* Welcome & Context */}
+                <div className="bg-gradient-to-r from-govt-blue-light/10 to-transparent p-6 rounded-l border-l-4 border-govt-blue-dark">
+                    <h2 className="text-2xl font-bold text-govt-text">Welcome, {officerData.firstName}</h2>
+                    <p className="mt-1 text-gray-600">Field Operations Dashboard for <span className="font-semibold text-govt-blue-dark">{officerData.region}</span></p>
                 </div>
-            </header>
 
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                {/* Welcome Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8"
-                >
-                    <h1 className="text-2xl font-bold text-govt-text">Welcome, {officerData.firstName}</h1>
-                    <p className="text-gray-600 mt-1">Here's what's happening in your region today.</p>
-                </motion.div>
-
-                {/* Officer Details Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="mb-8 bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-                >
-                    <h2 className="text-xl font-bold text-govt-text mb-4">Officer Details</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
-                        <div>
-                            <p className="text-gray-500 font-medium">Name</p>
-                            <p className="text-govt-text font-semibold">{officerData.firstName} {officerData.lastName}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 font-medium">Registration ID</p>
-                            <p className="text-govt-text font-semibold">{officerData.registrationId}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 font-medium">Age</p>
-                            <p className="text-govt-text font-semibold">{officerData.age}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 font-medium">Gender</p>
-                            <p className="text-govt-text font-semibold">{officerData.gender}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 font-medium">Location</p>
-                            <p className="text-govt-text font-semibold">{officerData.location}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 font-medium">Contact</p>
-                            <p className="text-govt-text font-semibold">{officerData.contact}</p>
-                        </div>
-                        <div>
-                            <p className="text-gray-500 font-medium">Email</p>
-                            <p className="text-govt-text font-semibold">{officerData.email}</p>
-                        </div>
-                    </div>
-                </motion.div>
-                {/* KPI Stats Section */}
+                {/* KPI Cards */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="mb-8"
                 >
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold text-govt-text">District-Level Statistics (Ahilyanagar)</h2>
-                        <p className="text-sm text-gray-500 font-medium">Last updated: {new Date().toLocaleDateString()}</p>
+                    <div className="flex justify-between items-center mb-4 border-b border-gray-200 pb-2">
+                        <h2 className="text-lg font-bold text-govt-text flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            District Statistics
+                        </h2>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">Last updated: {new Date().toLocaleDateString()}</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {kpiData.map((kpi, index) => (
                             <motion.div
                                 key={index}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + index * 0.1 }}
-                                className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center gap-6"
+                                whileHover={{ y: -5 }}
+                                className="bg-white rounded-lg p-5 shadow-sm border border-gray-200 relative overflow-hidden"
                             >
-                                <div className={`w-14 h-14 rounded-full flex items-center justify-center ${kpi.color.replace('text-', 'bg-').replace('-600', '-100')} ${kpi.color}`}>
+                                <div className="absolute top-0 right-0 p-4 opacity-10">
                                     {renderIcon(kpi.icon)}
                                 </div>
-                                <div>
-                                    <p className={`text-3xl font-bold ${kpi.color}`}>{kpi.value}</p>
-                                    <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">{kpi.label}</p>
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className={`p-3 rounded-md ${kpi.color.replace('text-', 'bg-').replace('-600', '-50')}`}>
+                                        {renderIcon(kpi.icon)}
+                                    </div>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${kpi.color.replace('text-', 'bg-').replace('-600', '-50')} ${kpi.color}`}>
+                                        View
+                                    </span>
                                 </div>
+                                <h3 className="text-3xl font-extrabold text-gray-800 mb-1">{kpi.value}</h3>
+                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">{kpi.label}</p>
                             </motion.div>
                         ))}
                     </div>
                 </motion.div>
 
-                {/* Quick Actions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {quickActions.map((action, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6 + index * 0.1 }}
-                            onClick={() => navigate(action.path)}
-                            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-lg hover:border-govt-blue-light transition-all cursor-pointer group"
-                        >
-                            <div className={`w-14 h-14 rounded-lg flex items-center justify-center mb-4 ${action.color} group-hover:scale-110 transition-transform`}>
-                                {action.icon}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column: Officer Profile */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                                <h3 className="font-bold text-govt-text">Officer Profile</h3>
+                                <button className="text-xs text-govt-blue-dark font-semibold hover:underline">Edit</button>
                             </div>
-                            <h3 className="text-lg font-bold text-govt-text mb-2 group-hover:text-govt-blue-dark transition-colors">
-                                {action.title}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                                {action.description}
-                            </p>
-                        </motion.div>
-                    ))}
+                            <div className="p-6 space-y-4">
+                                <div className="flex justify-between border-b border-gray-100 pb-2">
+                                    <span className="text-sm text-gray-500">Registration ID</span>
+                                    <span className="text-sm font-semibold text-gray-900">{officerData.registrationId}</span>
+                                </div>
+                                <div className="flex justify-between border-b border-gray-100 pb-2">
+                                    <span className="text-sm text-gray-500">Location</span>
+                                    <span className="text-sm font-semibold text-gray-900">{officerData.location}</span>
+                                </div>
+                                <div className="flex justify-between border-b border-gray-100 pb-2">
+                                    <span className="text-sm text-gray-500">Email</span>
+                                    <span className="text-sm font-semibold text-gray-900">{officerData.email}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-sm text-gray-500">Last Login</span>
+                                    <span className="text-sm font-semibold text-green-600">Today, 09:30 AM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pending Actions Block */}
+                        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                            <div className="bg-blue-50 px-6 py-3 border-b border-blue-100 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                                    <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                                </svg>
+                                <h3 className="font-bold text-blue-800 text-sm">Tasks for Today</h3>
+                            </div>
+                            <div className="p-4">
+                                <ul className="space-y-3">
+                                    <li className="text-sm text-gray-600 flex justify-between items-center">
+                                        <span>Document Verifications</span>
+                                        <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-bold">12 Pending</span>
+                                    </li>
+                                    <li className="text-sm text-gray-600 flex justify-between items-center">
+                                        <span>Field Visits</span>
+                                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded-full font-bold">3 Scheduled</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Quick Actions Grid */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full p-6">
+                            <h2 className="text-lg font-bold text-govt-text mb-6 flex items-center gap-2">
+                                <span className="w-1 h-6 bg-govt-blue-light rounded-full"></span>
+                                Officer Tools
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {quickActions.map((action, index) => (
+                                    <motion.div
+                                        key={index}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.6 + index * 0.1 }}
+                                        onClick={() => navigate(action.path)}
+                                        className="bg-gray-50 rounded-lg p-5 shadow-sm border border-gray-200 hover:bg-white hover:shadow-md hover:border-govt-blue-light transition-all cursor-pointer group"
+                                    >
+                                        <div className="flex items-center gap-4 mb-3">
+                                            <div className={`w-12 h-12 rounded flex items-center justify-center ${action.color.replace('text-', 'bg-').replace('-600', '-100')} ${action.color} group-hover:scale-110 transition-transform`}>
+                                                {action.icon}
+                                            </div>
+                                            <h3 className="text-lg font-bold text-govt-text group-hover:text-govt-blue-dark transition-colors">
+                                                {action.title}
+                                            </h3>
+                                        </div>
+                                        <p className="text-sm text-gray-500 pl-16">
+                                            {action.description}
+                                        </p>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </GovtLayout>
     );
 };
 

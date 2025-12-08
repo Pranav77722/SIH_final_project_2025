@@ -134,9 +134,9 @@
     const CLEAR_BTN = document.getElementById('clearBtn');
     const ASK_TEXT_BTN = document.getElementById('askTextBtn');
 
-    const OPENROUTER_API_KEY = "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"; 
-    const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-    const MODEL_NAME = "meta-llama/llama-3.2-1b-instruct";
+    const GEMINI_API_KEY = "AIzaSyCdInN8hYL28X3tWt1ZxRjsBgwCAEJ5vBg"; 
+    const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    // const MODEL_NAME = "gemini-1.5-flash"; // Not needed in URL approach directly but implied
 
     let recognition = null;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -156,7 +156,7 @@
             const text = ev.results[0][0].transcript;
             TRANSCRIPT.textContent = text;
             STATUS.textContent = "Got transcript — sending to server...";
-            await askOpenRouter(text, LANG_SEL.value);
+            await askGemini(text, LANG_SEL.value);
         };
     }
 
@@ -194,7 +194,7 @@
         const q = MANUAL.value.trim();
         if (!q) return alert('Type a question');
         TRANSCRIPT.textContent = q;
-        await askOpenRouter(q, LANG_SEL.value);
+        await askGemini(q, LANG_SEL.value);
     });
 
     CLEAR_BTN.addEventListener('click', () => {
@@ -207,25 +207,27 @@
         MANUAL.focus();
     });
 
-    async function askOpenRouter(userText, lang = 'en-IN') {
-        STATUS.textContent = 'Contacting OpenRouter...';
+    async function askGemini(userText, lang = 'en-IN') {
+        STATUS.textContent = 'Contacting Gemini...';
         ASSISTANT.textContent = 'Thinking...';
 
         const payload = {
-            model: MODEL_NAME,
-            messages: [
-                { role: "system", content: 'SAKSHAM is a Digital Beneficiary Identification & Management System for the PM-AJAY GIA scheme. It includes: Citizen Android App (Aadhaar login, auto-profile, document upload using CameraX, vernacular + voice guidance, real-time tracking). Officer Portal (document-level approval, discrepancy resolution, geotagged field verification, dashboards). State Admin Portal (scheme configuration, fund tracking, analytics). SAKSHAM User Constraints: Low literacy, vernacular preference, poor connectivity, 42% document rejection due to bad uploads, 58% smartphone availability (Ghulewadi). Citizens without phones apply through CSC / Panchayat helpdesk / enumerators with SMS/IVR updates.  SAKSHAM Core Goals: Reduce processing time (47→7 days), reduce leakage (<5%), lower inclusion/exclusion errors (<8%), improve transparency (38%→100%). SAKSHAM Accessibility (GIGW 3.0): Must follow WCAG 2.1 AA: screen reader support, high-contrast mode, 200% text scaling, alt-text, keyboard navigation, simple-language mode, voice guidance, step-by-step flows, cognitive disability support (icons+text, consistent layout, clear errors). GIGW 3 Cybersecurity (GIGW 3.0): Must follow ISO 27001, CERT-IN controls, OWASP Top 10/ASVS, role-based access, encrypted data (TLS 1.3 + AES-256), audit logs, VAPT, Safe-to-Host certification. GIGW 3Architecture: Kotlin app, React + Node portals, Firebase backend (prototype), mock Aadhaar/DigiLocker/PFMS APIs—production must use real integrations with proper consent & security. SAKSHAMRules for AI:Always ensure compliance with GIGW 3.0, WCAG 2.1 AA, CERT-IN security.Always offer non-smartphone alternatives (CSC, enumerator, web portal).Keep answers simple, structured, and actionable.Cite SAKSHAM report or GIGW where relevant.' },
-                { role: "user", content: userText }
-            ],
-            max_tokens: 300,
-            temperature: 0.2
+            contents: [{
+                parts: [{ text: userText }]
+            }],
+            systemInstruction: {
+                parts: [{ text: 'SAKSHAM is a Digital Beneficiary Identification & Management System for the PM-AJAY GIA scheme. It includes: Citizen Android App (Aadhaar login, auto-profile, document upload using CameraX, vernacular + voice guidance, real-time tracking). Officer Portal (document-level approval, discrepancy resolution, geotagged field verification, dashboards). State Admin Portal (scheme configuration, fund tracking, analytics). SAKSHAM User Constraints: Low literacy, vernacular preference, poor connectivity, 42% document rejection due to bad uploads, 58% smartphone availability (Ghulewadi). Citizens without phones apply through CSC / Panchayat helpdesk / enumerators with SMS/IVR updates.  SAKSHAM Core Goals: Reduce processing time (47→7 days), reduce leakage (<5%), lower inclusion/exclusion errors (<8%), improve transparency (38%→100%). SAKSHAM Accessibility (GIGW 3.0): Must follow WCAG 2.1 AA: screen reader support, high-contrast mode, 200% text scaling, alt-text, keyboard navigation, simple-language mode, voice guidance, step-by-step flows, cognitive disability support (icons+text, consistent layout, clear errors). GIGW 3 Cybersecurity (GIGW 3.0): Must follow ISO 27001, CERT-IN controls, OWASP Top 10/ASVS, role-based access, encrypted data (TLS 1.3 + AES-256), audit logs, VAPT, Safe-to-Host certification. GIGW 3Architecture: Kotlin app, React + Node portals, Firebase backend (prototype), mock Aadhaar/DigiLocker/PFMS APIs—production must use real integrations with proper consent & security. SAKSHAMRules for AI:Always ensure compliance with GIGW 3.0, WCAG 2.1 AA, CERT-IN security.Always offer non-smartphone alternatives (CSC, enumerator, web portal).Keep answers simple, structured, and actionable.Cite SAKSHAM report or GIGW where relevant.' }]
+            },
+            generationConfig: {
+                temperature: 0.2,
+                maxOutputTokens: 300
+            }
         };
 
         try {
-            const res = await fetch(OPENROUTER_URL, {
+            const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload)
@@ -233,14 +235,14 @@
 
             if (!res.ok) {
                 const body = await res.text();
-                ASSISTANT.textContent = `OpenRouter error: ${res.status} ${res.statusText}\n${body}`;
+                ASSISTANT.textContent = `Gemini error: ${res.status} ${res.statusText}\n${body}`;
                 STATUS.textContent = 'Error';
-                console.error('OpenRouter error', res.status, body);
+                console.error('Gemini error', res.status, body);
                 return;
             }
 
             const j = await res.json();
-            let reply = j?.choices?.[0]?.message?.content?.trim() || '[no reply]';
+            let reply = j?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '[no reply]';
 
             // Remove '*' from the reply
             reply = reply.replace(/\*/g, '');

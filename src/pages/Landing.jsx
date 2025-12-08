@@ -228,6 +228,15 @@ const Landing = () => {
                                 >
                                     {t('landing.officerLogin')}
                                 </Link>
+                                <a
+                                    href="https://citizen-xi.vercel.app/"
+                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => setShowLoginDropdown(false)}
+                                >
+                                    Citizen Login
+                                </a>
                             </div>
                         )}
                     </div>
