@@ -11,6 +11,8 @@ const Landing = () => {
     const [selectedState, setSelectedState] = useState(null);
     const [whoWithUsSlide, setWhoWithUsSlide] = useState(0);
     const [ourServicesSlide, setOurServicesSlide] = useState(0);
+    const [showSearchModal, setShowSearchModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const { t, i18n } = useTranslation();
 
     const stateSchemes = {
@@ -74,7 +76,6 @@ const Landing = () => {
         { logo: '/Buyer-Seller-mKisan-Color.svg', name: 'mKisan' },
         { logo: '/Digi-Sevak-Color.svg', name: 'Digi Sevak' },
         { logo: '/Digital-India-Color.svg', name: 'Digital India' },
-        { logo: '/ESIC-Color.svg', name: 'ESIC' },
         { logo: '/Government-of-Telangana-Color.svg', name: 'Government of Telangana' },
         { logo: '/India-Post-Payments-Bank-Color.svg', name: 'India Post Payments Bank' },
         { logo: '/J-and-K-Employment-Exchange-Color.svg', name: 'J&K Employment Exchange' },
@@ -94,7 +95,7 @@ const Landing = () => {
     const ourServicesData = [
         { logo: '/Aadhar-Color.svg', name: 'Aadhaar Services' },
         { logo: '/Digital-India-Color.svg', name: 'Digital India Services' },
-        { logo: '/ESIC-Color.svg', name: 'ESIC Services' },
+
         { logo: '/NPS-Black.svg', name: 'Pension Services' },
         { logo: '/PMKVY-Black.svg', name: 'Skill Development' },
         { logo: '/Pradhan-Mantri-Aawas-Yojna-Black.svg', name: 'Housing Services' },
@@ -193,12 +194,11 @@ const Landing = () => {
                 <div className="flex items-center space-x-8 ml-auto">
                     <nav className="flex items-center text-dark-text font-bold text-lg space-x-8">
                         <Link to="/" className="hover:text-primary-blue">{t('landing.home')}</Link>
-                        <Link to="/services" className="hover:text-primary-blue">{t('landing.services')}</Link>
                         <a href="#schemes-section" className="hover:text-primary-blue cursor-pointer">{t('landing.schemes')}</a>
                         <Link to="/digilocker" className="hover:text-primary-blue">{t('landing.digilocker')}</Link>
                         <a href="https://heatmap-jade.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-blue">{t('landing.heatmap')}</a>
                         {/* Search Icon */}
-                        <button className="text-dark-text hover:text-primary-blue">
+                        <button onClick={() => setShowSearchModal(true)} className="text-dark-text hover:text-primary-blue">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                             </svg>
@@ -434,79 +434,6 @@ const Landing = () => {
                         </div>
                     </div>
                 </section>
-
-                {/* OUR SERVICES SECTION */}
-                <section className="mx-[2cm] px-4 py-12">
-                    <h2 className="text-3xl font-bold text-dark-text text-left mb-8">{t('landing.ourServices')}</h2>
-                    <div className="relative">
-                        {/* Navigation Arrows */}
-                        <button
-                            onClick={() => setOurServicesSlide((prev) => (prev - 1 + totalOurServicesSlides) % totalOurServicesSlides)}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white p-3 rounded-full shadow-lg text-primary-blue hover:bg-primary-blue hover:text-white transition-all"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-                        <button
-                            onClick={() => setOurServicesSlide((prev) => (prev + 1) % totalOurServicesSlides)}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white p-3 rounded-full shadow-lg text-primary-blue hover:bg-primary-blue hover:text-white transition-all"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                        {/* Carousel Container */}
-                        <div className="overflow-hidden py-4">
-                            <div
-                                className="flex transition-transform duration-500 ease-in-out"
-                                style={{ transform: `translateX(-${ourServicesSlide * 100}%)` }}
-                            >
-                                {Array.from({ length: totalOurServicesSlides }).map((_, slideIndex) => (
-                                    <div key={slideIndex} className="min-w-full flex-shrink-0">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-                                            {ourServicesData
-                                                .slice(slideIndex * itemsPerSlide, (slideIndex + 1) * itemsPerSlide)
-                                                .map((service, index) => (
-                                                    <motion.div
-                                                        key={index}
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.4, delay: index * 0.1 }}
-                                                        className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-3 flex flex-col items-center justify-between h-[140px] w-full"
-                                                        whileHover={{ y: -8, scale: 1.02 }}
-                                                    >
-                                                        <div className="h-20 w-20 flex items-center justify-center mb-2 flex-shrink-0">
-                                                            <img
-                                                                src={service.logo}
-                                                                alt={service.name}
-                                                                className="max-h-full max-w-full object-contain"
-                                                            />
-                                                        </div>
-                                                        <p className="text-center text-xs font-semibold text-dark-text px-1 line-clamp-2">
-                                                            {service.name}
-                                                        </p>
-                                                    </motion.div>
-                                                ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        {/* Dot Indicators */}
-                        <div className="flex justify-center mt-6 gap-2">
-                            {Array.from({ length: totalOurServicesSlides }).map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setOurServicesSlide(index)}
-                                    className={`h-2.5 rounded-full transition-all duration-300 ${ourServicesSlide === index ? 'bg-primary-blue w-8' : 'bg-[#cfd8dc] w-2.5'
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
                 {/* SCHEMES BY STATES SECTION */}
                 <section id="schemes-section" className="w-full bg-white py-12">
                     <div className="max-w-7xl ml-auto px-4 pr-16 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -566,29 +493,17 @@ const Landing = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
                                 {[
                                     {
-                                        icon: (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#055a8f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-                                            </svg>
-                                        ),
+                                        icon: <img src="/cd1.png" alt="All Schemes" className="w-full h-full object-contain" />,
                                         title: t('landing.allSchemesOnePlace'),
                                         tags: [t('landing.centralGovernment'), t('landing.stateGovernment'), t('landing.schemesTag')]
                                     },
                                     {
-                                        icon: (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#055a8f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.488 1.107 1.488 2.09 0 1.077-.71 1.954-1.7 2.39m-9.75-5.167c-.884.284-1.488 1.107-1.488 2.09 0 1.077.71 1.954 1.7 2.39m9.75-5.167c0-.885-.356-1.676-.93-2.25m-9.75 7.5c.884.284 1.488 1.107 1.488 2.09 0 1.077-.71 1.954-1.7 2.39m9.75-5.167c0-.885-.356-1.676-.93-2.25m-9.75 7.5c.884.284 1.488 1.107 1.488 2.09 0 1.077-.71 1.954-1.7 2.39M12 12.75h.008v.008H12v-.008z" />
-                                            </svg>
-                                        ),
+                                        icon: <img src="/cd2.png" alt="All Engagements" className="w-full h-full object-contain" />,
                                         title: t('landing.allEngagementsOnePlace'),
                                         tags: [t('landing.feedbackRating'), t('landing.notifications'), t('landing.customerSupport'), t('landing.aiBot')]
                                     },
                                     {
-                                        icon: (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-[#055a8f]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                                            </svg>
-                                        ),
+                                        icon: <img src="/cd3.png" alt="All Transactions" className="w-full h-full object-contain" />,
                                         title: t('landing.allTransactionsOnePlace'),
                                         tags: [t('landing.status'), t('landing.bills'), t('landing.applications'), t('landing.manyMore')]
                                     },
@@ -608,7 +523,7 @@ const Landing = () => {
                                         transition={{ duration: 0.2 }}
                                         className="bg-white rounded-2xl p-5 shadow-lg flex flex-col items-start"
                                     >
-                                        <div className="h-11 w-11 rounded-lg bg-blue-50 flex items-center justify-center mb-4">
+                                        <div className="h-16 w-16 rounded-lg bg-blue-50 flex items-center justify-center mb-4 p-2">
                                             {card.icon}
                                         </div>
                                         <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
@@ -625,14 +540,14 @@ const Landing = () => {
                         </div>
 
                         {/* Right Column: Hero Image */}
-                        <div className="w-full lg:w-2/5 flex justify-center lg:justify-end relative">
+                        <div className="w-full lg:w-2/5 flex justify-center lg:justify-end relative -ml-[4cm]">
                             <motion.img
                                 initial={{ opacity: 0, x: 50 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.8, delay: 0.2 }}
-                                src="/hero_person_phone.png"
+                                src="/appss.jpg"
                                 alt="Smiling person using Saksham app"
-                                className="max-h-[500px] object-contain relative z-10 drop-shadow-2xl"
+                                className="max-h-[600px] object-contain relative z-10 drop-shadow-2xl rounded-2xl"
                             />
                         </div>
                     </div>
@@ -725,71 +640,21 @@ const Landing = () => {
                         </div>
 
                         {/* Right Column: Phone Mockup */}
-                        <div className="md:w-1/2 flex justify-center md:justify-end">
+                        <div className="md:w-1/2 flex justify-center md:justify-end items-end">
                             <motion.img
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ duration: 0.6, delay: 0.4 }}
-                                src="https://via.placeholder.com/300x600/0071CE/FFFFFF?text=App+Screen"
+                                src="/appss2.jpg"
                                 alt="Phone Mockup with App Screen"
-                                className="max-h-80 md:max-h-96 object-contain"
+                                className="max-h-80 md:max-h-96 object-contain rounded-2xl"
                             />
                         </div>
                     </motion.div>
                 </section>
 
-                {/* FIELD ENUMERATOR MOBILE APP SECTION */}
-                <section className="mx-[2cm] px-4 py-12">
-                    <div className="bg-gradient-to-r from-govt-blue-light to-govt-blue-dark rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between shadow-card-shadow text-white">
-                        {/* Left Column: App Screenshot */}
-                        <div className="md:w-1/2 flex justify-center md:justify-start mb-8 md:mb-0">
-                            <motion.img
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.6, delay: 0.4 }}
-                                src="/app.png"
-                                alt="Field Enumerator Mobile App Screenshot"
-                                className="max-h-80 md:max-h-96 object-contain rounded-xl shadow-lg"
-                            />
-                        </div>
-
-                        {/* Right Column: Features and Download */}
-                        <div className="md:w-1/2 text-center md:text-left">
-                            <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-4">
-                                {t('landing.fieldEnumeratorApp')}
-                            </h2>
-                            <p className="text-lg opacity-90 mb-6">
-                                {t('landing.fieldEnumeratorAppDescription')}
-                            </p>
-                            <ul className="text-lg space-y-3 mb-8">
-                                <li className="flex items-center justify-center md:justify-start">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    {t('landing.gpsTagging')}
-                                </li>
-                                <li className="flex items-center justify-center md:justify-start">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    {t('landing.photoDocumentation')}
-                                </li>
-                                <li className="flex items-center justify-center md:justify-start">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-purple-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
-                                    </svg>
-                                    {t('landing.realtimeDbSync')}
-                                </li>
-                            </ul>
-                            <a href="#" className="inline-block bg-white text-govt-blue-dark px-8 py-3 rounded-lg shadow-md hover:bg-gray-100 transition-colors font-semibold text-lg">
-                                {t('landing.downloadAppButton')}
-                            </a>
-                        </div>
-                    </div>
-                </section>
-
             </main>
+
 
             {/* SCHEME MODAL */}
             {showSchemeModal && selectedState && (
@@ -941,6 +806,44 @@ const Landing = () => {
                     </div>
                 </div>
             </footer>
+
+            {/* SEARCH MODAL */}
+            {showSearchModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-start justify-center pt-20" onClick={() => setShowSearchModal(false)}>
+                    <div className="bg-white rounded-2xl max-w-2xl w-full mx-4 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold text-primary-blue">Search</h2>
+                            <button
+                                onClick={() => setShowSearchModal(false)}
+                                className="text-gray-500 hover:text-gray-700 transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search for schemes, services, or information..."
+                                className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue text-lg"
+                                autoFocus
+                            />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                            </svg>
+                        </div>
+                        {searchQuery && (
+                            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                                <p className="text-gray-600">Search results for: <span className="font-semibold text-primary-blue">{searchQuery}</span></p>
+                                <p className="text-sm text-gray-500 mt-2">Search functionality coming soon...</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
