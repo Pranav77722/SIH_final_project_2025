@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getApplications, approveApplication, rejectApplication, getCitizenDocuments, updateDocumentStatus } from '../../../api/applications';
+import { getApplications, approveApplication, rejectApplication, getCitizenDocuments, updateDocumentStatus, verifyAllDocuments } from '../../../api/applications';
 import GovtLayout from '../../../components/layout/GovtLayout';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -90,6 +90,30 @@ const DocumentVerification = () => {
             }
         } else {
             alert('Failed to update document status');
+        }
+    };
+
+    const handleVerifyAll = async () => {
+        if (!selectedApp || documents.length === 0) return;
+
+        // Optimistic update
+        const originalDocs = [...documents];
+        setDocuments(prev => prev.map(d => ({ ...d, status: 'verified' })));
+
+        try {
+            const docIds = documents.map(d => d.id);
+            const response = await verifyAllDocuments(selectedApp.id, docIds);
+
+            if (!response.success) {
+                // Revert on failure
+                setDocuments(originalDocs);
+                alert('Failed to verify all documents');
+            } else {
+                // Success feedback (optional, visual change is usually enough)
+            }
+        } catch (error) {
+            console.error("Batch verification failed", error);
+            setDocuments(originalDocs);
         }
     };
 
@@ -357,15 +381,29 @@ const DocumentVerification = () => {
                                         <h3 className="text-lg font-bold text-govt-text">Digital Document Verification</h3>
                                         <p className="text-sm text-gray-500">Applicant: <strong>{selectedApp.applicantName}</strong></p>
                                     </div>
-                                    <button
-                                        type="button"
-                                        className="text-gray-400 hover:text-gray-600"
-                                        onClick={handleCloseModal}
-                                    >
-                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                    <div className="flex items-center gap-3">
+                                        {!loadingDocs && documents.length > 0 && documents.some(d => d.status !== 'verified') && (
+                                            <button
+                                                type="button"
+                                                onClick={handleVerifyAll}
+                                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors flex items-center gap-2"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                                Verify All
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            className="text-gray-400 hover:text-gray-600"
+                                            onClick={handleCloseModal}
+                                        >
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="p-6 overflow-y-auto bg-gray-50">
@@ -378,10 +416,16 @@ const DocumentVerification = () => {
                                             {documents.map((doc, index) => (
                                                 <div key={doc.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-10 h-10 rounded flex items-center justify-center ${doc.status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
-                                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                                                            </svg>
+                                                        <div className={`w-10 h-10 rounded flex items-center justify-center ${doc.status === 'rejected' ? 'bg-red-50 text-red-600' : (doc.status === 'verified' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600')}`}>
+                                                            {doc.status === 'verified' ? (
+                                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            ) : (
+                                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                                                </svg>
+                                                            )}
                                                         </div>
                                                         <div>
                                                             <p className="font-semibold text-gray-800 capitalize">{doc.name.replace(/_/g, ' ')}</p>
@@ -416,7 +460,7 @@ const DocumentVerification = () => {
                                                             </div>
                                                         ) : (
                                                             <>
-                                                                <button onClick={() => handleDocumentAction(doc.id, 'verified')} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Mark Valid">
+                                                                <button onClick={() => handleDocumentAction(doc.id, 'verified')} className={`p-1.5 rounded ${doc.status === 'verified' ? 'text-gray-300 cursor-not-allowed' : 'text-green-600 hover:bg-green-50'}`} disabled={doc.status === 'verified'} title="Mark Valid">
                                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                                                 </button>
                                                                 <button onClick={() => setRejectingDocId(doc.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Mark Invalid">
@@ -439,13 +483,13 @@ const DocumentVerification = () => {
 
                 {/* Full Screen Document Preview */}
                 {previewDoc && (
-                    <div className="fixed inset-0 z-[60] overflow-hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                         <div className="absolute inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={() => setPreviewDoc(null)}></div>
 
-                        <div className="absolute inset-4 md:inset-10 flex flex-col bg-[#222] rounded-lg shadow-2xl overflow-hidden">
+                        <div className="relative w-auto h-auto max-w-[95vw] max-h-[95vh] flex flex-col bg-[#222] rounded-lg shadow-2xl overflow-hidden">
                             {/* Preview Header */}
-                            <div className="h-14 bg-[#111] flex justify-between items-center px-6 border-b border-gray-800">
-                                <h3 className="text-gray-200 font-mono text-sm truncate">{previewDoc.name}</h3>
+                            <div className="h-14 bg-[#111] flex justify-between items-center px-6 border-b border-gray-800 shrink-0">
+                                <h3 className="text-gray-200 font-mono text-sm truncate max-w-[200px]">{previewDoc.name}</h3>
                                 <div className="flex items-center gap-4">
                                     <a href={previewDoc.url} target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
                                         Download
@@ -457,21 +501,38 @@ const DocumentVerification = () => {
                                 </div>
                             </div>
 
-                            {/* Preview Content */}
-                            <div className="flex-1 bg-[#333] relative flex items-center justify-center p-0">
+                            {/* Preview Content - Auto sizing */}
+                            <div className="flex-1 bg-[#333] relative flex items-center justify-center p-0 overflow-auto min-h-[300px] min-w-[300px]">
                                 {['jpg', 'jpeg', 'png', 'gif', 'webp'].some(ext => previewDoc.url.toLowerCase().endsWith(ext) || previewDoc.url.toLowerCase().includes('image')) ? (
                                     <img
                                         src={previewDoc.url}
                                         alt="Preview"
-                                        className="max-w-full max-h-full object-contain"
+                                        className="w-auto h-auto max-w-full max-h-[85vh] object-contain block mx-auto"
                                     />
+                                ) : previewDoc.url.toLowerCase().includes('.pdf') || previewDoc.type === 'pdf' ? (
+                                    /* Native PDF Viewer */
+                                    <object
+                                        data={previewDoc.url}
+                                        type="application/pdf"
+                                        className="w-[80vw] h-[80vh]"
+                                    >
+                                        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                            <p>Unable to display PDF directly.</p>
+                                            <a href={previewDoc.url} target="_blank" rel="noreferrer" className="text-blue-400 underline mt-2">Download to view</a>
+                                        </div>
+                                    </object>
                                 ) : (
-                                    /* Use Google Docs Viewer for everything else (PDFs, Docs, etc.) */
-                                    <iframe
-                                        src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.url)}&embedded=true`}
-                                        className="w-full h-full border-0"
-                                        title="Document Viewer"
-                                    ></iframe>
+                                    /* Google Docs Viewer */
+                                    <div className="relative w-[80vw] h-[80vh]">
+                                        <iframe
+                                            src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.url)}&embedded=true`}
+                                            className="w-full h-full border-0"
+                                            title="Document Viewer"
+                                        ></iframe>
+                                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1 rounded-full pointer-events-none">
+                                            If preview fails, use Download
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>

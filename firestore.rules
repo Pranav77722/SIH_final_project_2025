@@ -8,16 +8,30 @@ service cloud.firestore {
       // Create only if user creates their own record
       allow create: if request.auth != null 
                     && request.resource.data.uid == request.auth.uid;
-      // No updates allowed to citizen profile root
-      allow update: if false;
+      // Allow updates (for officers to set all_doc_verified)
+      allow update: if request.auth != null;
       // Read allowed to owner OR any authenticated user (for officers)
       allow read: if request.auth != null;
       
+
+
       // Subcollection: documents (Aadhaar, PAN, etc.)
       match /documents/{documentId} {
         // MODIFIED: Allow read/write for authenticated users so Officers can update status
         allow read, write: if request.auth != null;
       }
+
+      // Subcollection: schemes (Refactored architecture)
+      match /schemes/{schemeId} {
+        allow read, write: if request.auth != null;
+      }
+
+
+      // Subcollection: schemes (Refactored architecture)
+      match /schemes/{schemeId} {
+        allow read, write: if request.auth != null;
+      }
+
 
       // ------------------------------------
       // NOTIFICATIONS SUBCOLLECTION (NEW)
@@ -25,6 +39,7 @@ service cloud.firestore {
       match /notifications/{notificationId} {
         allow read, write: if request.auth != null;
       }
+      
     }
     // ------------------------------------
     // OFFICERS COLLECTION (login only)
@@ -76,6 +91,12 @@ service cloud.firestore {
     // FIELD ENUMERATORS (Added for Field Visit Scheduling)
     // ------------------------------------
     match /field_enumerators/{visitId} {
+      allow read, write: if request.auth != null;
+    }
+    // ------------------------------------
+    // FUND REQUESTS (Added for Fund Disbursement)
+    // ------------------------------------
+    match /fund_requests/{requestId} {
       allow read, write: if request.auth != null;
     }
     // ------------------------------------

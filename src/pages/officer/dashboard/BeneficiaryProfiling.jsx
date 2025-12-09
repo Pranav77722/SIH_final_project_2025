@@ -1,44 +1,141 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import Button from '../../../components/common/Button';
+import { getApplications } from '../../../api/applications';
 
 const BeneficiaryProfiling = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [selectedFilter, setSelectedFilter] = useState('all');
+    const [applications, setApplications] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data for various statistics
-    const stateWiseData = [
-        { state: 'Delhi', beneficiaries: 1200, sc: 450, st: 280 },
-        { state: 'UP', beneficiaries: 2400, sc: 890, st: 620 },
-        { state: 'Bihar', beneficiaries: 1800, sc: 670, st: 450 },
-        { state: 'MP', beneficiaries: 1500, sc: 520, st: 380 },
-        { state: 'Rajasthan', beneficiaries: 1100, sc: 410, st: 290 },
-    ];
+    useEffect(() => {
+        const fetchApps = async () => {
+            setLoading(true);
+            const data = await getApplications();
+            setApplications(data);
+            setLoading(false);
+        };
+        fetchApps();
+    }, []);
 
-    const genderData = [
-        { name: 'Male', value: 5240, percentage: 52.4 },
-        { name: 'Female', value: 4760, percentage: 47.6 },
-    ];
+    // --- Data Processing Logic ---
+    const processedData = useMemo(() => {
+        // 1. Filter Data
+        let filtered = applications;
+        if (selectedFilter !== 'all') {
+            filtered = applications.filter(app => {
+                const caste = (app.caste || '').toLowerCase();
+                const gender = (app.gender || '').toLowerCase();
+                if (selectedFilter === 'sc') return caste === 'sc';
+                if (selectedFilter === 'st') return caste === 'st';
+                if (selectedFilter === 'male') return gender === 'male';
+                if (selectedFilter === 'female') return gender === 'female';
+                return true;
+            });
+        }
 
-    const ageRangeData = [
-        { range: '18-25', count: 1200 },
-        { range: '26-35', count: 2800 },
-        { range: '36-45', count: 3200 },
-        { range: '46-60', count: 2100 },
-        { range: '60+', count: 700 },
-    ];
+        // 2. KPIs
+        const total = filtered.length;
+        const scCount = filtered.filter(a => (a.caste || '').toLowerCase() === 'sc').length;
+        const stCount = filtered.filter(a => (a.caste || '').toLowerCase() === 'st').length;
+        const approvedCount = filtered.filter(a => a.status === 'approved').length;
+        const successRate = total ? ((approvedCount / total) * 100).toFixed(1) : 0;
 
-    const monthlyTrendData = [
-        { month: 'Jan', approved: 120, rejected: 30, pending: 45 },
-        { month: 'Feb', approved: 150, rejected: 25, pending: 38 },
-        { month: 'Mar', approved: 180, rejected: 20, pending: 42 },
-        { month: 'Apr', approved: 210, rejected: 18, pending: 35 },
-        { month: 'May', approved: 240, rejected: 15, pending: 28 },
-        { month: 'Jun', approved: 280, rejected: 12, pending: 22 },
-    ];
+        // 3. State-wise Distribution
+        const stateMap = {};
+        filtered.forEach(app => {
+            // Try to extract state from address object or location string
+            let state = 'Unknown';
+            if (app.address && typeof app.address === 'object' && app.address.state) {
+                state = app.address.state;
+            } else if (typeof app.location === 'string' && app.location.includes(',')) {
+                // Fallback: try to grab last part of "Address, District, State"
+                const parts = app.location.split(',');
+                state = parts[parts.length - 1].trim();
+            }
+
+            if (!stateMap[state]) stateMap[state] = { state, beneficiaries: 0, sc: 0, st: 0 };
+            stateMap[state].beneficiaries += 1;
+            if ((app.caste || '').toLowerCase() === 'sc') stateMap[state].sc += 1;
+            if ((app.caste || '').toLowerCase() === 'st') stateMap[state].st += 1;
+        });
+        const stateWiseData = Object.values(stateMap).sort((a, b) => b.beneficiaries - a.beneficiaries).slice(0, 8); // Top 8
+
+        // 4. Gender Distribution
+        const genderMap = { Male: 0, Female: 0, Other: 0 };
+        filtered.forEach(app => {
+            const g = (app.gender || 'Other');
+            // Normalize
+            if (g.match(/male/i) && !g.match(/female/i)) genderMap.Male++;
+            else if (g.match(/female/i)) genderMap.Female++;
+            else genderMap.Other++;
+        });
+        const genderData = Object.keys(genderMap).map(key => ({
+            name: key,
+            value: genderMap[key],
+            percentage: total ? ((genderMap[key] / total) * 100).toFixed(1) : 0
+        })).filter(d => d.value > 0);
+
+        // 5. Age Range Distribution
+        const ageRanges = { '18-25': 0, '26-35': 0, '36-45': 0, '46-60': 0, '60+': 0 };
+        filtered.forEach(app => {
+            let age = 0;
+            if (app.dob) {
+                const birthDate = new Date(app.dob);
+                const today = new Date();
+                age = today.getFullYear() - birthDate.getFullYear();
+            } else if (app.age) {
+                age = parseInt(app.age);
+            }
+
+            if (age >= 18 && age <= 25) ageRanges['18-25']++;
+            else if (age >= 26 && age <= 35) ageRanges['26-35']++;
+            else if (age >= 36 && age <= 45) ageRanges['36-45']++;
+            else if (age >= 46 && age <= 60) ageRanges['46-60']++;
+            else if (age > 60) ageRanges['60+']++;
+        });
+        const ageRangeData = Object.keys(ageRanges).map(range => ({ range, count: ageRanges[range] }));
+
+        // 6. Monthly Trend (Mockish logic if date is static, but trying real dates)
+        const monthMap = {};
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        filtered.forEach(app => {
+            // Parse submissionDate (YYYY-MM-DD)
+            let date = new Date();
+            if (app.submissionDate && app.submissionDate !== 'N/A') {
+                date = new Date(app.submissionDate);
+            } else if (app.createdAt) {
+                date = new Date(app.createdAt.seconds * 1000);
+            }
+            const monthIdx = date.getMonth(); // 0-11
+            const monthName = months[monthIdx];
+
+            if (!monthMap[monthName]) monthMap[monthName] = { month: monthName, approved: 0, rejected: 0, pending: 0 };
+
+            if (app.status === 'approved') monthMap[monthName].approved++;
+            else if (app.status === 'rejected') monthMap[monthName].rejected++;
+            else monthMap[monthName].pending++;
+        });
+        // Sort by month index for chart
+        const monthlyTrendData = months.map(m => monthMap[m] || { month: m, approved: 0, rejected: 0, pending: 0 }).filter(m => m.approved + m.rejected + m.pending > 0 || true).slice(0, 6); // Just showing first 6 or all? Let's show filtered.
+
+        return {
+            total,
+            scCount,
+            stCount,
+            successRate,
+            stateWiseData,
+            genderData,
+            ageRangeData,
+            monthlyTrendData
+        };
+    }, [applications, selectedFilter]);
+
+    // Use extracted data
+    const { stateWiseData, genderData, ageRangeData, monthlyTrendData, total, scCount, stCount, successRate } = processedData;
 
     const COLORS = {
         primary: '#3b82f6', // govt-blue-light
@@ -51,6 +148,12 @@ const BeneficiaryProfiling = () => {
         chart2: '#6366f1',
         chart3: '#8b5cf6'
     };
+
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-govt-blue-dark"></div>
+        </div>;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
@@ -107,10 +210,10 @@ const BeneficiaryProfiling = () => {
                             <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
                                 <span className="text-xl">🏛️</span>
                             </div>
-                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
+                            {/* <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span> */}
                         </div>
                         <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wide">SC Beneficiaries</h3>
-                        <p className="text-3xl font-bold text-govt-text mt-1">2,940</p>
+                        <p className="text-3xl font-bold text-govt-text mt-1">{scCount}</p>
                     </div>
 
                     {/* Total ST Count */}
@@ -119,10 +222,10 @@ const BeneficiaryProfiling = () => {
                             <div className="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
                                 <span className="text-xl">🌳</span>
                             </div>
-                            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+8%</span>
+                            {/* <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+8%</span> */}
                         </div>
                         <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wide">ST Beneficiaries</h3>
-                        <p className="text-3xl font-bold text-govt-text mt-1">2,020</p>
+                        <p className="text-3xl font-bold text-govt-text mt-1">{stCount}</p>
                     </div>
 
                     {/* Benefited Percentage */}
@@ -133,18 +236,18 @@ const BeneficiaryProfiling = () => {
                             </div>
                         </div>
                         <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wide">Success Rate</h3>
-                        <p className="text-3xl font-bold text-govt-text mt-1">87.5%</p>
+                        <p className="text-3xl font-bold text-govt-text mt-1">{successRate}%</p>
                     </div>
 
-                    {/* Funds Released */}
+                    {/* Total Count */}
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                         <div className="flex items-center justify-between mb-4">
                             <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600">
-                                <span className="text-xl">💰</span>
+                                <span className="text-xl">👥</span>
                             </div>
                         </div>
-                        <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wide">Funds Released</h3>
-                        <p className="text-3xl font-bold text-govt-text mt-1">₹45.2Cr</p>
+                        <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Displayed</h3>
+                        <p className="text-3xl font-bold text-govt-text mt-1">{total}</p>
                     </div>
                 </div>
 
@@ -228,7 +331,7 @@ const BeneficiaryProfiling = () => {
                         <ul className="space-y-2 text-blue-800 text-sm">
                             <li className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                                87.5% beneficiary success rate
+                                {successRate}% beneficiary success rate
                             </li>
                             <li className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
@@ -246,7 +349,7 @@ const BeneficiaryProfiling = () => {
                         <ul className="space-y-2 text-green-800 text-sm">
                             <li className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                                10,000 total beneficiaries
+                                {total} total beneficiaries
                             </li>
                             <li className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-600"></span>
